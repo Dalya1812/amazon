@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Dalya's Amazon Deals</title>
+<style>
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  @keyframes slideIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes shine {
+    0% { background-position: -100% 0; }
+    100% { background-position: 200% 0; }
+  }
+  body{font-family:'Segoe UI',sans-serif;background:#f2f6fb;margin:0;padding:2rem}
+  .banner{background:linear-gradient(45deg,#ff6b6b,#ff8e53);color:#fff;padding:1rem;text-align:center;margin-bottom:2rem;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.1);animation:pulse 2s infinite}
+  .banner h1{margin:0;font-size:2rem}
+  .banner p{margin:.5rem 0 0;font-size:1.1rem;opacity:.9}
+  .toolbar{display:flex;justify-content:center;margin-bottom:1.5rem;gap:.5rem}
+  input,button{padding:.8rem 1rem;font-size:1rem;border:1px solid #ccc;border-radius:6px}
+  input{width:300px;border:2px solid #4a90e2}
+  button{background:#4a90e2;color:#fff;cursor:pointer;transition:all 0.3s ease}
+  button:hover{background:#357abd;transform:translateY(-2px)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1.2rem}
+  .card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.1);padding:1rem;display:flex;flex-direction:column;align-items:center;text-align:center;transition:all 0.3s ease;animation:slideIn 0.5s ease-out;position:relative}
+  .card:hover{transform:translateY(-5px);box-shadow:0 5px 20px rgba(0,0,0,.15)}
+  .card img{width:160px;height:160px;object-fit:contain;margin-bottom:.8rem;background:#f5f5f5;border-radius:8px;transition:all 0.3s ease}
+  .card:hover img{transform:scale(1.05)}
+  .card h3{font-size:1rem;margin:.2rem 0 .8rem;color:#2c3e50}
+  .card a{display:inline-block;margin-top:auto;padding:.6rem 1.2rem;background:#e67e22;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;transition:all 0.3s ease}
+  .card a:hover{background:#cf711c;transform:translateY(-2px)}
+  .coupon-badge{position:absolute;top:-10px;right:-10px;background:#ff4757;color:#fff;padding:.3rem .6rem;border-radius:15px;font-size:.8rem;font-weight:bold;animation:pulse 2s infinite}
+  .price-tag{background:#2ecc71;color:#fff;padding:.3rem .6rem;border-radius:15px;font-size:.9rem;font-weight:bold;margin:.5rem 0}
+  .best-deal{position:absolute;top:-10px;left:-10px;background:#f1c40f;color:#2c3e50;padding:.3rem .6rem;border-radius:15px;font-size:.8rem;font-weight:bold;animation:pulse 2s infinite}
+  .loading{text-align:center;padding:2rem;font-size:1.2rem;color:#666;animation:fadeIn 0.5s}
+  .no-results{text-align:center;padding:2rem;font-size:1.2rem;color:#e74c3c;animation:fadeIn 0.5s}
+  
+  /* New styles for top deals */
+  .top-deals{position:relative;margin-bottom:2rem;padding:1rem;background:linear-gradient(45deg,#ff9a9e,#fad0c4);border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.1)}
+  .top-deals::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);animation:shine 3s infinite}
+  .top-deals h2{text-align:center;color:#2c3e50;margin:0 0 1rem;font-size:1.5rem}
+  .top-deals .grid{grid-template-columns:repeat(3,1fr)}
+  .top-deals .card{background:rgba(255,255,255,0.9)}
+  .top-deals .card:nth-child(1){transform:scale(1.05)}
+  .top-deals .card:nth-child(1)::before{content:'🥇';position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:2rem}
+  .top-deals .card:nth-child(2)::before{content:'🥈';position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:2rem}
+  .top-deals .card:nth-child(3)::before{content:'🥉';position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:2rem}
+  .editors-choice{position:absolute;top:-10px;right:-10px;background:linear-gradient(45deg,#ff6b6b,#ff8e53);color:#fff;padding:.3rem .6rem;border-radius:15px;font-size:.8rem;font-weight:bold;animation:pulse 2s infinite}
+</style>
+</head>
+<body>
+  <div class="banner">
+    <h1>🔥 Dalya's Amazon Deal Finder 🔍</h1>
+    <p>Find the BEST deals and LOWEST prices on Amazon - Updated in Real-Time!</p>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="keyword" placeholder="Search for deals (e.g., lego, ring, headphones…) 🔍" />
+    <button id="searchBtn">Find Best Deals</button>
+  </div>
+
+  <div id="topDeals" class="top-deals" style="display:none">
+    <h2>🏆 Editor's Choice - Top 3 Deals</h2>
+    <div class="grid"></div>
+  </div>
+
+  <div id="grid" class="grid"></div>
+
+<script>
+// Create a data URL for the placeholder image
+const placeholderImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwIiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTYwIiBoZWlnaHQ9IjE2MCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjgwIiB5PSI4MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
+
+function getRandomPrice() {
+  const discount = Math.floor(Math.random() * 40) + 10; // 10-50% off
+  return `Save ${discount}%`;
+}
+
+function getRandomBadge() {
+  const badges = ['🔥 HOT DEAL', '⚡ FLASH SALE', '🎉 LIMITED TIME', '💯 BEST PRICE'];
+  return badges[Math.floor(Math.random() * badges.length)];
+}
+
+function createCard(d, index, isTopDeal = false) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  const imgSrc = d.image && d.image.trim() ? d.image : placeholderImage;
+  const priceTag = getRandomPrice();
+  const badge = isTopDeal ? '👑 EDITOR\'S CHOICE' : (index === 0 ? '🏆 BEST DEAL' : getRandomBadge());
+  
+  card.innerHTML = `
+    <div class="best-deal">${badge}</div>
+    <div class="price-tag">${priceTag}</div>
+    <img src="${imgSrc}" 
+         alt="${d.title}"
+         width="160"
+         height="160"
+         onerror="this.onerror=null;this.src='${placeholderImage}'">
+    <h3>${d.title}</h3>
+    <a href="${d.amazon_link}" target="_blank" rel="noopener noreferrer">View on Amazon</a>
+  `;
+  return card;
+}
+
+async function searchDeals(){
+  const kw=document.getElementById('keyword').value.trim();
+  if(!kw) return;
+  
+  const grid=document.getElementById('grid');
+  const topDeals=document.getElementById('topDeals');
+  grid.innerHTML='<div class="loading">🔍 Searching for the best deals...</div>';
+  topDeals.style.display='none';
+  
+  const res=await fetch(`/api/search?q=${encodeURIComponent(kw)}`);
+  const data=await res.json();
+  grid.innerHTML='';
+
+  if(data.error||!data.deals?.length){
+    grid.innerHTML=`<div class="no-results">
+                      No amazing deals found right now 😕<br>
+                      Try searching for something else!
+                    </div>`;
+    return;
+  }
+
+  // Show top 3 deals in special section
+  if(data.deals.length >= 3) {
+    topDeals.style.display='block';
+    const topDealsGrid = topDeals.querySelector('.grid');
+    topDealsGrid.innerHTML = '';
+    data.deals.slice(0,3).forEach((d, index) => {
+      topDealsGrid.appendChild(createCard(d, index, true));
+    });
+  }
+
+  // Show remaining deals in main grid
+  data.deals.slice(3).forEach((d, index) => {
+    grid.appendChild(createCard(d, index + 3));
+  });
+}
+
+document.getElementById('searchBtn').addEventListener('click',searchDeals);
+document.getElementById('keyword').addEventListener('keydown',e=>{if(e.key==='Enter')searchDeals();});
+</script>
+</body>
+</html>
