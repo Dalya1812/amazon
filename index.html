@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Dalya's Amazon Deals</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dalya's Amazon Deal Finder 🤖</title>
 <style>
   @keyframes pulse {
     0% { transform: scale(1); }
@@ -55,50 +56,106 @@
   .top-deals .card:nth-child(2)::before{content:'🥈';position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:2rem}
   .top-deals .card:nth-child(3)::before{content:'🥉';position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:2rem}
   .editors-choice{position:absolute;top:-10px;right:-10px;background:linear-gradient(45deg,#ff6b6b,#ff8e53);color:#fff;padding:.3rem .6rem;border-radius:15px;font-size:.8rem;font-weight:bold;animation:pulse 2s infinite}
+  
+  /* Loading Animation */
+  .loading-container {
+    display: none;
+    text-align: center;
+    margin: 20px 0;
+  }
+  
+  .robot-animation {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+    position: relative;
+  }
+  
+  .robot-animation::before {
+    content: "🤖";
+    font-size: 50px;
+    position: absolute;
+    animation: search 1.5s infinite;
+  }
+  
+  @keyframes search {
+    0% { transform: translateX(-20px) rotate(-10deg); }
+    50% { transform: translateX(20px) rotate(10deg); }
+    100% { transform: translateX(-20px) rotate(-10deg); }
+  }
+  
+  .loading-text {
+    margin-top: 10px;
+    font-size: 18px;
+    color: #666;
+    animation: pulse 1.5s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+  }
+
+  /* Optimize image loading */
+  .deal-image {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .deal-image.loaded {
+    opacity: 1;
+  }
+
+  /* Improve search input */
+  #searchInput {
+    transition: all 0.3s ease;
+    border: 2px solid #ddd;
+  }
+  
+  #searchInput:focus {
+    border-color: #ff9900;
+    box-shadow: 0 0 5px rgba(255, 153, 0, 0.3);
+  }
+
+  /* Add hover effects to deals */
+  .deal-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .deal-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
 </style>
 </head>
 <body>
   <div class="banner">
-    <h1>🔥 Dalya's Amazon Deal Finder 🔍</h1>
-    <p>Find the BEST deals and LOWEST prices on Amazon - Updated in Real-Time!</p>
+    <h1>🔥 Dalya's Amazon Deal Finder 🤖</h1>
+    <p>My AI robot is searching for the BEST deals and LOWEST prices on Amazon - Updated in Real-Time!</p>
   </div>
 
   <div class="toolbar">
-    <input type="text" id="keyword" placeholder="Search for deals (e.g., lego, ring, headphones…) 🔍" />
+    <input type="text" id="keyword" placeholder="Search for deals (e.g., lego, ring, headphones…) 🔍">
     <button id="searchBtn">Find Best Deals</button>
   </div>
 
-  <div id="topDeals" class="top-deals" style="display:none">
-    <h2>🏆 Editor's Choice - Top 3 Deals</h2>
-    <div class="grid"></div>
+  <div class="loading-container" id="loadingContainer">
+    <div class="robot-animation"></div>
+    <div class="loading-text">🤖 My robot is searching for the best deals and coupons...</div>
   </div>
 
   <div id="grid" class="grid"></div>
 
 <script>
-// Create a data URL for the placeholder image
 const placeholderImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwIiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTYwIiBoZWlnaHQ9IjE2MCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjgwIiB5PSI4MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
 
-function getRandomPrice() {
-  const discount = Math.floor(Math.random() * 40) + 10; // 10-50% off
-  return `Save ${discount}%`;
-}
-
-function getRandomBadge() {
-  const badges = ['🔥 HOT DEAL', '⚡ FLASH SALE', '🎉 LIMITED TIME', '💯 BEST PRICE'];
-  return badges[Math.floor(Math.random() * badges.length)];
-}
-
-function createCard(d, index, isTopDeal = false) {
+function createCard(d) {
   const card = document.createElement('div');
   card.className = 'card';
   const imgSrc = d.image && d.image.trim() ? d.image : placeholderImage;
-  const priceTag = getRandomPrice();
-  const badge = isTopDeal ? '👑 EDITOR\'S CHOICE' : (index === 0 ? '🏆 BEST DEAL' : getRandomBadge());
   
   card.innerHTML = `
-    <div class="best-deal">${badge}</div>
-    <div class="price-tag">${priceTag}</div>
     <img src="${imgSrc}" 
          alt="${d.title}"
          width="160"
@@ -110,45 +167,44 @@ function createCard(d, index, isTopDeal = false) {
   return card;
 }
 
-async function searchDeals(){
-  const kw=document.getElementById('keyword').value.trim();
-  if(!kw) return;
-  
-  const grid=document.getElementById('grid');
-  const topDeals=document.getElementById('topDeals');
-  grid.innerHTML='<div class="loading">🔍 Searching for the best deals...</div>';
-  topDeals.style.display='none';
-  
-  const res=await fetch(`/api/search?q=${encodeURIComponent(kw)}`);
-  const data=await res.json();
-  grid.innerHTML='';
+async function searchDeals() {
+  const kw = document.getElementById('keyword').value.trim();
+  if (!kw) return;
 
-  if(data.error||!data.deals?.length){
-    grid.innerHTML=`<div class="no-results">
-                      No amazing deals found right now 😕<br>
-                      Try searching for something else!
-                    </div>`;
-    return;
-  }
+  const grid = document.getElementById('grid');
+  const loadingContainer = document.getElementById('loadingContainer');
+  
+  grid.innerHTML = '';
+  loadingContainer.style.display = 'block';
 
-  // Show top 3 deals in special section
-  if(data.deals.length >= 3) {
-    topDeals.style.display='block';
-    const topDealsGrid = topDeals.querySelector('.grid');
-    topDealsGrid.innerHTML = '';
-    data.deals.slice(0,3).forEach((d, index) => {
-      topDealsGrid.appendChild(createCard(d, index, true));
+  try {
+    const response = await fetch(`/api/search?q=${encodeURIComponent(kw)}`);
+    const data = await response.json();
+
+    if (data.error || !data.deals?.length) {
+      grid.innerHTML = `
+        <div class="no-results">
+          No amazing deals found right now 😕<br>
+          Try searching for something else!
+        </div>`;
+      return;
+    }
+
+    data.deals.forEach(d => {
+      grid.appendChild(createCard(d));
     });
+  } catch (error) {
+    console.error('Error:', error);
+    grid.innerHTML = '<div class="no-results">Oops! Something went wrong. Please try again.</div>';
+  } finally {
+    loadingContainer.style.display = 'none';
   }
-
-  // Show remaining deals in main grid
-  data.deals.slice(3).forEach((d, index) => {
-    grid.appendChild(createCard(d, index + 3));
-  });
 }
 
-document.getElementById('searchBtn').addEventListener('click',searchDeals);
-document.getElementById('keyword').addEventListener('keydown',e=>{if(e.key==='Enter')searchDeals();});
+document.getElementById('searchBtn').addEventListener('click', searchDeals);
+document.getElementById('keyword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchDeals();
+});
 </script>
 </body>
 </html>
