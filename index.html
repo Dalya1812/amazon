@@ -319,7 +319,7 @@ const performSearch = debounce(async (keyword) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-    const response = await fetch(`/api/search?q=${encodeURIComponent(keyword)}`, {
+    const response = await fetch(`http://localhost:8081/api/search?q=${encodeURIComponent(keyword)}`, {
       signal: controller.signal
     });
     clearTimeout(timeoutId);
@@ -372,7 +372,7 @@ async function loadTopDeals() {
   if (!topDealsGrid) return;
   
   try {
-    const response = await fetch('/api/top-deals');
+    const response = await fetch('http://localhost:8081/api/top-deals');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
